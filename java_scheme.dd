@@ -1,0 +1,18 @@
+	20131210
+1747	We shall see if I really persist with this Scheme interpreter. But I'm starting a log about it, FWIW.
+	So, to reiterate: we start with the lexer. Tokenizer. Make a vector of token references. We can instantiate parentheses once. Perhaps some other things too.
+	I guess it makes sense to have a constructor do the work. And what will we have at the end? A vector of tokens. I guess we should have a class wrapping this vector; call it ...
+	Oh wait. What about the REPL. Yeah, we should start there.
+1903	Gotta rethink my class design. I had a collection class that populated itself in its own constructor. That seems pretty weird.
+	We're working on the lexer. Aargh! More distracting music. Fucking Pixies.
+	It's object-oriented design that is confounding me. Should our lexer be an object? Should "lex" be a method of something else? The interpreter, perhaps? Possibly. Then we could just use a basic ArrayList<Token>, and not create a new type for the collection.
+
+	20131212
+1640	I apparently learned that you can't put wildcards in the class path in a manifest file. Is there any way to get the third party package to work besides putting my source in a jar file? Don't know.
+____	Wow, that was so wasteful. I'd better remember that for next time.
+	Basically, I moved my source files into a subdirectory. But they were still open in vim. So when I saved new copies, they went back in the old location.So when I recompiled, it used the moved copies, not the newly updated copies. That's why none of my changes seemed to do anything.
+____	Huh, that's kind of dumb. If you have return statements in each branch of a switch statement, the function *would* always exit properly. But that's not good enough for the compiler.
+___	What have I learned about types from this little misadventure?
+	- The reference type at compile time can refer to any subclass instance at runtime.
+	- The compiler will let you call any method prototyped on the reference type--even abstract ones.
+	- The version of the method called at runtime will be (obviously) the one that belongs to the actual class of the instance.

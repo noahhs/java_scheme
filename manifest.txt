@@ -1,0 +1,2 @@
+Main-Class: InterpreterTest
+Class-Path: lib/commons-io-2.4.jar
