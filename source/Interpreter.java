@@ -15,9 +15,12 @@ public class Interpreter {
 
 	public ArrayList<Token> lex () {
 		ArrayList<Token> tokens = new ArrayList<Token>();
+		// Need to be able to interpret a sequence of expressions without enclosing parentheses.
+		//ArrayList<TreeTerm> treeTerms = new ArrayList<TreeTerm>();
 		int level = 0;
 		while(true) {
 			Token token = read_token();
+			//System.out.println(token.type());
 			switch (token.type()) {
 				case LEFT_PAREN:	level += 1;
 										break;
@@ -71,7 +74,7 @@ public class Interpreter {
 			if (whitespaceOrParen(ch)) {
 				return new Token(str);
 			}
-			str = str + ch;
+			str = str + (char)ch;
 			istream.mark(1);
 			try {
 				ch = istream.read();

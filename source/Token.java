@@ -1,4 +1,4 @@
-public class Token {
+public class Token implements TreeTerm {
 	public enum TokenType {LEFT_PAREN, RIGHT_PAREN, NUMERIC, IDENTIFIER};
 
 	private TokenType type;
@@ -28,8 +28,8 @@ public class Token {
 			case LEFT_PAREN:
 			case RIGHT_PAREN:	return (this.type() == token.type());
 			case NUMERIC:	return (this.number == token.number);
-			case IDENTIFIER:	return (this.string == token.string);
-			default:	return false;
+			case IDENTIFIER:	return (this.string.equals(token.string));
+			default:		return false;
 		}
 	}
 	
