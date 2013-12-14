@@ -11,29 +11,22 @@ public class InterpreterTest {
 	private static ArrayList<Boolean> results = new ArrayList<Boolean>();
 
 	public static void main (String[] args) {
-		String testString = "(foo (bar baz (foo) bar)" + "\n" + "baz)";
+		String e1 = "(foo (bar baz (foo) bar)";
+		String e2 = "baz)";
+		String e3 = "foo";
+		String testString = e1 + "\n" + e2 + e3 + "\n" + "bar";
 		stubInputStream = IOUtils.toInputStream(testString);
 		interpreter = new Interpreter(stubInputStream, stubOutputStream);
 		
-		// test lex
-		ArrayList<Token> rightResult = new ArrayList<Token>();
-
-		rightResult.add(new Token(Token.TokenType.LEFT_PAREN));
-		rightResult.add(new Token("foo"));
-		rightResult.add(new Token(Token.TokenType.LEFT_PAREN));
-		rightResult.add(new Token("bar"));
-		rightResult.add(new Token("baz"));
-		rightResult.add(new Token(Token.TokenType.LEFT_PAREN));
-		rightResult.add(new Token("foo"));
-		rightResult.add(new Token(Token.TokenType.RIGHT_PAREN));
-		rightResult.add(new Token("bar"));
-		rightResult.add(new Token(Token.TokenType.RIGHT_PAREN));
-		rightResult.add(new Token("baz"));
-		rightResult.add(new Token(Token.TokenType.RIGHT_PAREN));
+		// test Interpreter.read()
 		
-		ArrayList<Token> result = interpreter.lex();
+		String result;
+		try {
+			result = interpreter.read().toString();
+		} catch (Exception e) { result = e.toString(); }
+		String rightResult = "[" + e1 + " " + e2 + " " + e3 + "]";
 		tests.add("Lex test");
-		results.add(arrayListsEqual(result, rightResult));
+		results.add(result.equals(rightResult));
 
 		//display results
 		for (int x = 0; x < tests.size(); x += 1) {

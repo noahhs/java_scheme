@@ -2,6 +2,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Stack;
 
 public class Interpreter {
 
@@ -13,40 +14,50 @@ public class Interpreter {
 		ostream = out;
 	}
 
-	public ArrayList<Token> lex () {
-		ArrayList<Token> tokens = new ArrayList<Token>();
-		// Need to be able to interpret a sequence of expressions without enclosing parentheses.
-		//ArrayList<TreeTerm> treeTerms = new ArrayList<TreeTerm>();
-		int level = 0;
+	public ArrayList<TreeTerm> read () throws Exception {
+		// At the top level, interpret a sequence of expressions without enclosing parentheses.
+		ArrayList<TreeTerm> topLevelTerms = new ArrayList<TreeTerm>();
+		Stack<TokenTree> openTerms = new Stack<TokenTree>();
+
 		while(true) {
-			Token token = read_token();
-			//System.out.println(token.type());
-			switch (token.type()) {
-				case LEFT_PAREN:	level += 1;
-										break;
-				case RIGHT_PAREN:	level -= 1;
-										break;
-			}
-			tokens.add(token);
-			if (level == 0) {
-				return tokens;
+			Boolean canTerminate = (openTerms.empty());
+			Token newToken = read_token(canTerminate);
+			switch (newToken.type()) {
+				case LEFT_PAREN:	TokenTree newTree = new TokenTree();
+							if (canTerminate) {
+								topLevelTerms.add(newTree);
+							} else {
+								openTerms.peek().add(newTree);
+							}
+							openTerms.push(newTree);
+							break;
+				case RIGHT_PAREN:	if (canTerminate) {
+								throw new Exception("ERROR: Too many closing parens.");
+							} else { openTerms.pop(); }
+							break;
+				case TERMINATE:	return topLevelTerms;
+				default:		openTerms.peek().add(newToken);
 			}
 		}
+		
+
 	}
 
-	private Token read_token () {
+	private Token read_token (Boolean canTerminate) {
 		int ch = 0;
 		try {
 			ch = istream.read();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		if (Character.isWhitespace(ch)) {
-			return read_token();
-		}
 		switch(ch) {
 			case '(':	return new Token(Token.TokenType.LEFT_PAREN);
 			case ')':	return new Token(Token.TokenType.RIGHT_PAREN);
+			case '\n':	if (canTerminate) { return new Token(Token.TokenType.TERMINATE); }
+			// To do: handle EOF
+		}
+		if (Character.isWhitespace(ch)) {
+			return read_token(canTerminate);
 		}
 		if (Character.isDigit(ch)) {
 			return read_numeric(ch);

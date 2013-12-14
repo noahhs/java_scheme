@@ -1,5 +1,5 @@
 public class Token implements TreeTerm {
-	public enum TokenType {LEFT_PAREN, RIGHT_PAREN, NUMERIC, IDENTIFIER};
+	public enum TokenType {LEFT_PAREN, RIGHT_PAREN, NUMERIC, IDENTIFIER, TERMINATE};
 
 	private TokenType type;
 	private String string;
@@ -38,6 +38,7 @@ public class Token implements TreeTerm {
 		switch (type) {
 			case LEFT_PAREN:	return "LEFT_PAREN";
 			case RIGHT_PAREN:	return "RIGHT_PAREN";
+			case TERMINATE:	return "TERMINATE";
 			case NUMERIC:	return number.toString();
 			// HA HA
 			//case NUMERIC:	switch (number.getClass().getName()) {

@@ -1,11 +1,34 @@
 public class TokenTree implements TreeTerm {
+	// Will eventually be a doubly linked list
 	
 	private class Term {
-		TreeTerm term;
-		Term next;
+		private TreeTerm contents;
+		private Term previous;
+	
+		public Term (TreeTerm contents, Term previous) {
+			this.contents = contents;
+			this.previous = previous;
+		}
+
+		public String toString() {
+			if (previous == null) {
+				return contents.toString();
+			} else {
+				return previous.toString() + " " + contents.toString();
+			}
+		}
+	}
+		
+	private Term last;
+
+	public void add (TreeTerm term) {
+		last = new Term(term, last);	
 	}
 
-	private Term first;
+	public String toString() {
+		return "(" + last.toString() + ")";
+	}
+
 }
 
 	//public boolean isEmpty() { return (first == null); }

@@ -5,7 +5,7 @@ public class Repl {
 		Interpreter interpreter = new Interpreter(System.in, System.out);
 
 		while(true) {
-			ArrayList<Token> tokens = interpreter.lex();
+			ArrayList<TreeTerm> tokens = interpreter.lex();
 			Sexp sexp = interpreter.parse(tokens);
 			interpreter.eval(sexp);
 		}
