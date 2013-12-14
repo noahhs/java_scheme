@@ -14,7 +14,7 @@ public class InterpreterTest {
 		String e1 = "(foo (bar baz (foo) bar)";
 		String e2 = "baz)";
 		String e3 = "foo";
-		String testString = e1 + "\n" + e2 + e3 + "\n" + "bar";
+		String testString = e1 + "\n" + e2 + e3 + "\n" + "bar" + "\n";
 		stubInputStream = IOUtils.toInputStream(testString);
 		interpreter = new Interpreter(stubInputStream, stubOutputStream);
 		
@@ -23,8 +23,10 @@ public class InterpreterTest {
 		String result;
 		try {
 			result = interpreter.read().toString();
-		} catch (Exception e) { result = e.toString(); }
-		String rightResult = "[" + e1 + " " + e2 + " " + e3 + "]";
+		} catch (Exception e) {
+			System.out.println(result = e.toString());
+		}
+		String rightResult = "[" + e1 + " " + e2 + ", " + e3 + "]";
 		tests.add("Lex test");
 		results.add(result.equals(rightResult));
 

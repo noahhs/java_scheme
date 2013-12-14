@@ -26,7 +26,11 @@ public class TokenTree implements TreeTerm {
 	}
 
 	public String toString() {
-		return "(" + last.toString() + ")";
+		if (last == null) {
+			return "()";
+		} else {
+			return "(" + last.toString() + ")";
+		}
 	}
 
 }

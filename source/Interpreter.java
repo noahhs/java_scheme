@@ -14,33 +14,51 @@ public class Interpreter {
 		ostream = out;
 	}
 
-	public ArrayList<TreeTerm> read () throws Exception {
+	public ArrayList<TreeTerm> read () throws ParenException {
 		// At the top level, interpret a sequence of expressions without enclosing parentheses.
 		ArrayList<TreeTerm> topLevelTerms = new ArrayList<TreeTerm>();
 		Stack<TokenTree> openTerms = new Stack<TokenTree>();
 
 		while(true) {
 			Boolean canTerminate = (openTerms.empty());
+			//System.out.println("canTerminate = " + canTerminate);
 			Token newToken = read_token(canTerminate);
+			//System.out.println("newToken = " + newToken.toString());
 			switch (newToken.type()) {
-				case LEFT_PAREN:	TokenTree newTree = new TokenTree();
+				case LEFT_PAREN:	//System.out.println("newToken.type() = " + newToken.type());
+							TokenTree newTree = new TokenTree();
+							//System.out.println("newTree = " + newTree.toString());
 							if (canTerminate) {
 								topLevelTerms.add(newTree);
 							} else {
 								openTerms.peek().add(newTree);
 							}
+							//System.out.println("Pushed item: " + openTerms.push(newTree));
 							openTerms.push(newTree);
 							break;
 				case RIGHT_PAREN:	if (canTerminate) {
-								throw new Exception("ERROR: Too many closing parens.");
-							} else { openTerms.pop(); }
+								throw new ParenException("ERROR: Too many closing parens.");
+							} else {
+								//System.out.println("Popped item: " + openTerms.pop());
+								openTerms.pop();
+							}
 							break;
 				case TERMINATE:	return topLevelTerms;
-				default:		openTerms.peek().add(newToken);
+				default:		if (canTerminate) {
+								topLevelTerms.add(newToken);
+							} else {
+								openTerms.peek().add(newToken);
+							}
 			}
 		}
 		
 
+	}
+
+	public class ParenException extends Exception {
+		public ParenException (String str) {
+			super(str);
+		}
 	}
 
 	private Token read_token (Boolean canTerminate) {
@@ -50,8 +68,10 @@ public class Interpreter {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		//System.out.println("ch = " + (char)ch);
 		switch(ch) {
-			case '(':	return new Token(Token.TokenType.LEFT_PAREN);
+			case '(':	//System.out.println("It's a '('!");
+					return new Token(Token.TokenType.LEFT_PAREN);
 			case ')':	return new Token(Token.TokenType.RIGHT_PAREN);
 			case '\n':	if (canTerminate) { return new Token(Token.TokenType.TERMINATE); }
 			// To do: handle EOF
@@ -69,7 +89,8 @@ public class Interpreter {
 	private Boolean whitespaceOrParen(int ch) {
 		switch(ch) {
 			case '(':
-			case ')':	try {
+			case ')':
+			case '\n':	try {
 						istream.reset();
 					} catch (IOException e) {
 						e.printStackTrace();

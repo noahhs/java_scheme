@@ -7,6 +7,7 @@ public class Token implements TreeTerm {
 
 	Token (TokenType type) {
 		this.type = type;
+		//System.out.println("Created a " + type.toString());
 	}
 
 	Token (Number contents) {
@@ -20,6 +21,7 @@ public class Token implements TreeTerm {
 	}
 
 	public TokenType type () {
+		//System.out.println("Its type is " + this.type.toString());
 		return this.type;
 	}
 
