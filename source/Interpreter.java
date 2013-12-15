@@ -117,10 +117,12 @@ public class Interpreter {
 	}
 
 	private Token read_numeric (int ch) {
+		//System.out.println("char: " + (char)ch);
 		String str = "";
 		Boolean hasDot = false;
 		while(true) {
 			if (whitespaceOrParen(ch)) {
+				//System.out.println("str = " + str);
 				if (hasDot) {
 					return new Token(Double.valueOf(str));
 				} else {
@@ -130,7 +132,7 @@ public class Interpreter {
 			if (ch == '.') {
 				hasDot = true;
 			}
-			str = str + ch;
+			str = str + (char)ch;
 			istream.mark(1);
 			try {
 				ch = istream.read();

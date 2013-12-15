@@ -11,9 +11,9 @@ public class InterpreterTest {
 	private static ArrayList<Boolean> results = new ArrayList<Boolean>();
 
 	public static void main (String[] args) {
-		String e1 = "(foo (bar baz (foo) bar)";
+		String e1 = "(1 (bar 2.22 (foo) bar)";
 		String e2 = "baz)";
-		String e3 = "foo";
+		String e3 = "3.3";
 		String testString = e1 + "\n" + e2 + e3 + "\n" + "bar" + "\n";
 		stubInputStream = IOUtils.toInputStream(testString);
 		interpreter = new Interpreter(stubInputStream, stubOutputStream);

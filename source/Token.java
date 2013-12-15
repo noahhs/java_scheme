@@ -1,3 +1,5 @@
+import java.io.OutputStream;
+
 public class Token implements TreeTerm {
 	public enum TokenType {LEFT_PAREN, RIGHT_PAREN, NUMERIC, IDENTIFIER, TERMINATE};
 
@@ -49,6 +51,14 @@ public class Token implements TreeTerm {
 			//				default:		return "";
 			//			}
 			case IDENTIFIER:	return string;
+			default:		return "";
+		}
+	}
+
+	public Object eval (OutputStream ostream) {
+		switch(type()) {
+			case IDENTIFIER:	return "";
+			case NUMERIC:	return "";
 			default:		return "";
 		}
 	}

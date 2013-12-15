@@ -1,3 +1,5 @@
+import java.io.OutputStream;
+
 public class TokenTree implements TreeTerm {
 	// Will eventually be a doubly linked list
 	
@@ -33,6 +35,9 @@ public class TokenTree implements TreeTerm {
 		}
 	}
 
+	public Object eval (OutputStream ostream) {
+		return "";
+	}
 }
 
 	//public boolean isEmpty() { return (first == null); }
