@@ -2,12 +2,16 @@ import java.util.ArrayList;
 
 public class Repl {
 	public static void main (String[] args) {
-		Interpreter interpreter = new Interpreter(System.in, System.out);
-
+		Reader reader = new Reader(System.in);
+		Closure closure = new Closure();
 		while(true) {
-			ArrayList<TreeTerm> tokens = interpreter.lex();
-			Sexp sexp = interpreter.parse(tokens);
-			interpreter.eval(sexp);
+			System.out.print(">> ");
+			ArrayList<Expression> expressions = reader.read();
+			for (Expression expression : expressions) {
+				if (expression == null) { Expression.evalNull(); }
+				Expression result = expression.eval(closure, System.out);
+				result.print(System.out);
+			}
 		}
 	}
 }
