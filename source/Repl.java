@@ -2,15 +2,17 @@ import java.util.ArrayList;
 
 public class Repl {
 	public static void main (String[] args) {
-		Reader reader = new Reader(System.in);
-		Closure closure = new Closure();
+		Runtime runtime = new Runtime(System.in, System.out);
+		String replPrompt = "<repl> ";
 		while(true) {
-			System.out.print(">> ");
-			ArrayList<Expression> expressions = reader.read();
+			System.out.print(replPrompt);
+			ArrayList<Expression> expressions = runtime.read();
 			for (Expression expression : expressions) {
 				if (expression == null) { Expression.evalNull(); }
-				Expression result = expression.eval(closure, System.out);
-				result.print(System.out);
+				else {
+					Expression result = expression.eval(runtime);
+					result.print(runtime);
+				}
 			}
 		}
 	}

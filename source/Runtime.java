@@ -1,20 +1,38 @@
-import java.io.InputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Deque;
+import java.io;
+import java.util;
+//import java.io.InputStream;
+//import java.io.OutputStream;
+//import java.io.IOException;
+//import java.util.ArrayList;
+//import java.util.Deque;
+//import java.util.HashTable;
+//import java.util.Map;
 
-public class Reader {
+public class Runtime {
 
 	private InputStream istream;
-
-	Interpreter (InputStream inp) {
+	private OutputStream ostream;
+	//private Deque<Map<String, BoundExpression>> bindingStack = new Deque<HashTable<String, BoundExpression>>();
+	private List closureFrames = new List(new ClosureFrame(), null);
+	
+	public Runtime (InputStream inp, OutputStream out) {
 		istream = inp;
+		ostream = out;
 	}
+
+	public void evalNull() { throwEval("Attempt to eval null"); }
+
+	public OutputStream ostream () { return ostream; }
+
+	public List closureFrames () { return closureFrames; }
 
 	public ArrayList<Expression> read () {
 		Deque<Expression> stack = stackUpTerms("\n");
 		ArrayList<Expression> list = new ArrayList<Expression>;
-		while(!stack.empty()) { list.add(0, stack.pop()); }
+		while(!stack.empty()) {
+			list.add(0, stack.pop());
+		}
+		return list;
 	}
 	
 	private Deque<Expression> stackUpTerms (String terminator) {
@@ -29,24 +47,24 @@ public class Reader {
 				break;
 			}
 			if (ch == "(") {
-				stack.push(readCompound());
+				stack.push(buildExpression(stackUpTerms(")")));
 			}
 			// add (") for string reader
 			// add (') for quote reader
-			if (ch == "." && whitespaceFollows()) {	
-				Expression validEnd;
-				if (terminator == ")" && (validEnd = validEnd()) != null) {
-					stack.push(validEnd);
+			if (ch == "." && whitespaceFollows()) {
+				if (terminator == ")") {
+					// will want to test this with null
+					stack.push(validEnd());
+					break;
 				} else {
 					throwRead("Illegal use of '.'");
 				}
-				break;
 			}
 			if (Character.isDigit(ch)) {
 				stack.push(readNumeric(ch));
 			}
 			if (!Character.isWhitespace(ch)) {
-				stack.push(readIdentifier(ch));
+				stack.push(readSymbol(ch));
 			}
 		}
 		return stack;
@@ -65,11 +83,14 @@ public class Reader {
 	private Expression validEnd () {
 		istream.mark(2147483647);
 		Deque<Expression> remainingTerms = stackTerms(")");
+		// read the end of the form as though it were a list.
+		// If only a single term remains, the stack size will be 2, with null on top.
 		if (remainingTerms.size() == 2 && remainingTerms.pop() == null) {
 			return remainingTerms.pop();
 		} else {
 			istream.reset();
-			return null;
+			throwRead("Illegal use of '.'");
+			return null; // null indicates invalid
 		}
 	}
 
@@ -83,15 +104,14 @@ public class Reader {
 		return ch;
 	}
 
-	private Expression readCompound () {
-		return buildExpression(stackUpTerms(")"));
-	}
-
-	private Expression buildExpression (Stack<Expression stack) {
-		if (stack.empty()) { return null; }
+	// the last frame on the stack will be null if a list, an expression if a pair.
+	// null		null
+	// (cons e null)	e null
+	// (cons e1 e2)	e1 e2
+	private Expression buildExpression (Stack<Expression> stack) {
 		Expression head = stack.pop();
 		if (stack.empty()) { return head; }
-		return buildExpression(stack).cons(head);
+		return new Pair(head, buildExpression(stack));
 	}
 
 	private Boolean whitespaceOrParen(int ch) {
@@ -108,11 +128,11 @@ public class Reader {
 		}
 	}
 
-	private Identifier readIdentifier (int ch) {
+	private Symbol readSymbol (int ch) {
 		String str = "";
 		while(true) {
 			if (whitespaceOrParen(ch)) {
-				return new Identifier(str);
+				return new Symbol(str);
 			}
 			str = str + (char)ch;
 			istream.mark(1);
@@ -153,4 +173,6 @@ public class Reader {
 			super(str);
 		}
 	}
+
+	public 
 }

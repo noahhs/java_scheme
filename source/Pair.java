@@ -1,8 +1,7 @@
 import java.io.OutputStream;
 
-public class Pair extends Expression {
+public class Pair extends Returnable {
 	
-	// uh-oh, this suggests a rethink of the lexing process. Bringing back the "reverse" idea. No backward-linking. No nested Term class.
 	private Expression head;
 	private Expression tail;
 	
@@ -10,24 +9,31 @@ public class Pair extends Expression {
 		this.head = head;
 		this.tail = tail;
 	}
-		
-	public void append (Expression term) {
-		last = new Term(term, last);
-		if (first == null) { first = last; }
+
+	public Expression car () { return head; }
+
+	public Expression cdr () { return tail; }
+
+	public Boolean isSymbol () { return false; }
+	
+	public Expression eval (Runtime runtime) {
+		return compile(runtime).eval(runtime);
 	}
 
-	public String toString () {
-		if (last == null) {
-			return "()";
+	public Boolean isCompound () { return true; }
+
+	public Boolean isList () {
+		if (tail == null) {
+			return true;
+		} else if (tail.isCompound()) {
+			return ((Pair)tail).isList();
 		} else {
-			return "(" + last.toString() + ")";
+			return false;
 		}
 	}
 
-	public EvalType eval (Closure closure, OutputStream ostream) {
-		if (head == null) { Expression.evalNull(); }
-		Expression application = head.eval(closure, ostream);
-		// first check special forms
-		if (
+	public Compiled compile (Runtime runtime) {
+		if (!isList()) { throwCompile("Cannot compile non-list pair"); }
+		return ((List)this).compile(runtime);
 	}
 }

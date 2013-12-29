@@ -1,27 +1,8 @@
 import java.lang.Math
 
-public class BuiltInProcedure implements Procedure {
+public class BuiltInProcedure extends Procedure {
 
 	public static enum Type {PLUS, MINUS, TIMES, DIVIDEDBY, EQUALS, MODULO, EXPONENTIAL, LESSTHAN, DISPLAY, CAR, CDR, CONS};
-
-	private static Map<Identifier, Expression> bindings = new HashMap<Identifier, BuiltInProcedure>();
-	
-	bindings.put(new Identifier("+"),		new BuiltInProcedure(PLUS);
-	bindings.put(new Identifier("-"),		new BuiltInProcedure(MINUS);
-	bindings.put(new Identifier("*"),		new BuiltInProcedure(TIMES);
-	bindings.put(new Identifier("/"),		new BuiltInProcedure(DIVIDEDBY);
-	bindings.put(new Identifier("="),		new BuiltInProcedure(EQUALS);
-	bindings.put(new Identifier("modulo"),	new BuiltInProcedure(MODULO);
-	bindings.put(new Identifier("^"),		new BuiltInProcedure(EXPONENTIAL);
-	bindings.put(new Identifier("<"),		new BuiltInProcedure(LESSTHAN);
-	bindings.put(new Identifier("display"),	new BuiltInProcedure(DISPLAY);
-	bindings.put(new Identifier("car"),		new BuiltInProcedure(CAR);
-	bindings.put(new Identifier("cdr"),		new BuiltInProcedure(CDR);
-	bindings.put(new Identifier("cons"),	new BuiltInProcedure(CONS);
-
-	public static BuiltInProcedure resolve (Identifier identifier) {
-		return bindings.get(identifier);
-	}
 
 	private Type type;
 
@@ -31,20 +12,23 @@ public class BuiltInProcedure implements Procedure {
 
 	public String toString () { return "#<procedure:" + this.string + ">"; }
 	
-	public Expression apply (ArrayList<Expression> arguments, OutputStream ostream) {
+	public Expression apply (List arguments, Runtime runtime) {
+		List args = arguments.evaluatedTerms(runtime);
+		Expression a1 = args.car();
+		List a2 = args.cdr().car();
 		switch (type) {
-			case PLUS:		return sum(arguments);
-			case MINUS:		return subtract(arguments);
-			case TIMES:		return multiply(arguments);
-			case DIVIDEDBY:	return divide(arguments);
-			case EQUALS:	return equals(arguments);
-			case MODULO:	return modulo(arguments);
-			case EXPONENTIAL:	return exponential(arguments);
-			case LESSTHAN:	return lessthan(arguments);
-			case DISPLAY:	return display(arguments, ostream);
-			case CAR:		return car(arguments);
-			case CDR:		return cdr(arguments);
-			case CONS:		return cons(arguments);
+			case PLUS:		return sum(args, runtime);
+			case MINUS:		return subtract(args, runtime);
+			case TIMES:		return multiply(args, runtime);
+			case DIVIDEDBY:	return divide(args, runtime);
+			case EQUALS:	return equals(args, runtime);
+			case MODULO:	return c.value() % d.car().value();
+			case EXPONENTIAL:	return args.car().value() ^ args.cdr().car().value();
+			case LESSTHAN:	return args.car().value() < args.cdr().car().value();
+			case DISPLAY:	return args.car().print(runtime);
+			case CAR:		return ((Pair)args.car()).car()
+			case CDR:		return ((Pair)args.car()).cdr();
+			case CONS:		return args.cdr().car().cons(args.car());
 			default:		return null;
 	}
 	
@@ -65,7 +49,7 @@ public class BuiltInProcedure implements Procedure {
 		if (arity > max) { throw InvalidEvalException("Arity mismatch"); }
 	}
 
-	private static Expression sum (ArrayList<Expression> arguments) {
+	private static Expression sum (List arguments) {
 		Number accum = 0; // should cast
 		for (Expression exp : arguments) {
 			accum += exp.value();

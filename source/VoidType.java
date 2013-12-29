@@ -4,5 +4,5 @@ public class VoidType extends SelfEvaluating {
 	}
 
 	@Override
-	public void print (OutputStream ostream) {}
+	public void print (OutputStream ostream) {}// do nothing, no line feed
 }

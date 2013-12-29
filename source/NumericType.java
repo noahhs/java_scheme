@@ -9,7 +9,7 @@ public class NumericType extends SelfEvaluating {
 		return number.toString();
 	}
 
-	@Override
+	//@Override
 	public Number value () {
 		return number;
 	}

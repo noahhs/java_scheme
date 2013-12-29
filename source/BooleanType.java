@@ -9,7 +9,7 @@ public class BooleanType extends SelfEvaluating {
 		return bool.toString();
 	}
 
-	@Override
+	//@Override
 	public Boolean toBoolean () {
 		return bool;
 	}

@@ -1,3 +1,3 @@
-public interface Procedure implements Expression {
-	public EvalType apply (ArrayList<EvalType> arguments, OutputStream ostream);
+public abstract class Procedure extends Expression {
+	public Expression apply (List arguments, Runtime runtime);
 }
