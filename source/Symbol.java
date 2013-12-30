@@ -1,6 +1,6 @@
 import java.io.OutputStream;
 
-public class Symbol extends Returnable {
+public class Symbol extends Atom {
 	
 	private static Map symbols = new HashMap<String, Symbol>();
 
@@ -8,7 +8,7 @@ public class Symbol extends Returnable {
 		return symbols.get(string);
 	}
 
-	public static Symbol add (Symbol symbol) {
+	private static Symbol add (Symbol symbol) {
 		symbols.put(symbol.string(), symbol);
 	}
 

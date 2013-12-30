@@ -12,19 +12,36 @@ public class Runtime {
 
 	private InputStream istream;
 	private OutputStream ostream;
-	//private Deque<Map<String, BoundExpression>> bindingStack = new Deque<HashTable<String, BoundExpression>>();
-	private List closureFrames = new List(new ClosureFrame(), null);
+	private List environment;
 	
-	public Runtime (InputStream inp, OutputStream out) {
+	public Runtime (InputStream inp, OutputStream out, EnvironmentFrame initialBindings) {
 		istream = inp;
 		ostream = out;
+		environment = new List(initialBindings, null);
 	}
 
+	public void addBinding (Symbol symbol, BoundExpression bound) {
+		((EnvironmentFrame)environment.car()).bind(symbol, bound);
+	}
+
+	public BoundExpression resolve (Symbol symbol) {
+		return resolveRest(symbol, environment);
+	}
+	
+	private BoundExpression resolveRest (Symbol symbol, List frames) {
+		BoundExpression found = ((EnvironmentFrame)frames.car()).resolve(symbol);
+		if (found != null) {
+			return found;
+		} else if (frames.cdr() == null) {
+			return null;
+		} else {
+			return resolveRest(symbol, frames.cdr());
+		}
+	}
+	
 	public void evalNull() { throwEval("Attempt to eval null"); }
 
 	public OutputStream ostream () { return ostream; }
-
-	public List closureFrames () { return closureFrames; }
 
 	public ArrayList<Expression> read () {
 		Deque<Expression> stack = stackUpTerms("\n");
@@ -173,6 +190,4 @@ public class Runtime {
 			super(str);
 		}
 	}
-
-	public 
 }

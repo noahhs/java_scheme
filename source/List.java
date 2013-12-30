@@ -1,20 +1,6 @@
 public class List extends Pair {
 
-	private static Map<String, BuiltInProcedure.Type> procType = new HashMap<String, BuiltInProcedure.Type>();
-	procType.put("+", PLUS);
-	procType.put("-", MINUS);
-	procType.put("*", TIMES);
-	procType.put("/", DIVIDEDBY);
-	procType.put("=", EQUALS);
-	procType.put("modulo", MODULO);
-	procType.put("^", EXPONENTIAL);
-	procType.put("<", LESSTHAN);
-	procType.put("display", DISPLAY);
-	procType.put("car", CAR);
-	procType.put("cdr", CDR);
-	procType.put("cons", CONS);
-
-	public List(Expression head, List tail) {
+	public List(Pairable head, List tail) {
 		this.head = head;
 		this.tail = tail;
 	}
@@ -27,7 +13,7 @@ public class List extends Pair {
 	@Override
 	public List cdr () { return (List)super.cdr(); }
 	@Override
-	public List cons (Expression exp) { return (List)super.cons(exp); }
+	public List cons (Pairable exp) { return (List)super.cons(exp); }
 	@Override
 	public Boolean isList () { return true; }
 
@@ -56,48 +42,58 @@ public class List extends Pair {
 			return this.cdr().evaluatedTerms(runtime).cons(evaluatedHead);
 		}
 	}
-	
 
-	public Expression compile (Runtime runtime) {
-		Compiled compiledHead;
+	public Compiled compile (Runtime runtime) {
 		if (head.isCompound()) {
-			compiledHead = head.compile(runtime);
-		} else if (head.isSymbol()) {
-			BoundExpression bound = runtime.resolve(head);
-			if (bound == null) {
-				SpecialForm.Keyword keyword = SpecialForm.keyword(head);
-				if (keyword == null) {
-					compiledHead = Variable(head, null);
-				} else {
-					switch (keyword) {
-						case DEFINE:	if (tail != null && tail.cdr() != null && (Expression arg1 = tail.car()).isSymbol()) {
-										Compiled compiledArg2 = tail.cdr().car().compile(runtime);
-										return new DefineForm((Symbol)arg1, compiledArg2, runtime);
-									} else {
-										throwCompile("Bad syntax in define form");
-										return null;
-									}
-						case let":		return null;//return new LetForm(list, runtime);
-						case let*:		return null;//return new LetSplatForm(list, runtime);
-						case quote":	return null;//return new QuoteForm(list, runtime);
-						case begin":	return null;//return new BeginForm(list, runtime);
-						default:		return null;
-					}
-				}
+			if (((Pair)head).isList()) {
+				return new Application((List)head, tail, runtime);
 			} else {
-				compiledHead = new Variable(head, bound);
+				throwCompile("Application: head not a procedure");
+				return null;
 			}
+		} else if ((Atom)head.isSymbol()) {
+			BoundExpression bound = runtime.resolve((Symbol)head);
+			if (bound == null && (SpecialForm.Keyword keyword = SpecialForm.keyword((Symbol)head)) != null) {
+				return specialForm(keyword, runtime);
+			}
+			return new Application(new Variable((Symbol)head, bound), this, runtime);
 		} else {
 			// could there be a self-evaluating procedure in here? Think about later.
-			throwCompile("Application: not a procedure");
+			throwCompile("Application: head not a procedure");
 			return null;
 		}
-		List compiledTail;
-		if (tail == null) {
-			compiledTail = null;
-		} else {
-			compiledTail = tail.compiledTerms(runtime);
+	}
+
+	private SpecialForm specialForm(SpecialForm.Keyword keyword, Runtime runtime) {
+		switch (keyword) {
+			case DEFINE:	Returnable arg1 = tail.arg(1, Symbol);
+						Returnable arg2 = tail.arg(2, Returnable);
+						if (arg1 != null && arg2 != null) {
+							return new DefineForm((Symbol)arg1, (Returnable)arg2, runtime);
+						} else {
+							throwCompile("Bad syntax in define form");// should we put this checking logic in the constructor?
+							return null;
+						}
+			case LAMBDA:	if (tail != null & tail.cdr() != null && (Expression arg1 = tail.car()).isCompound()) {
+							  Expression arg2 = tail.cdr().car();
+
+			case LET:		return null;//return new LetForm(list, runtime);
+			case LET_SPLAT:	return null;//return new LetSplatForm(list, runtime);
+			case QUOTE:		return null;//return new QuoteForm(list, runtime);
+			case BEGIN:		return null;//return new BeginForm(list, runtime);
+			default:		return null;
 		}
-		return new Application(compiledHead, compiledTail);
+	}
+
+	private Returnable arg (int argNum, Class dass) {
+		if (argNum == 1) {
+			if (dass.isAssignableFrom(head.class) {
+				return head;
+			} else {
+				return null;
+			}
+		} else {
+			return tail.arg(argNum - 1, dass);
+		}
 	}
 }

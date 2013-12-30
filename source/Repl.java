@@ -2,7 +2,7 @@ import java.util.ArrayList;
 
 public class Repl {
 	public static void main (String[] args) {
-		Runtime runtime = new Runtime(System.in, System.out);
+		Runtime runtime = new Runtime(System.in, System.out, BuiltInProcedure.bindings());
 		String replPrompt = "<repl> ";
 		while(true) {
 			System.out.print(replPrompt);

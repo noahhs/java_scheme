@@ -2,17 +2,17 @@ import java.io.OutputStream;
 
 public class Pair extends Returnable {
 	
-	private Expression head;
-	private Expression tail;
+	private Pairable head;
+	private Pairable tail;
 	
-	public Pair (Expression head, Expression tail) {
+	public Pair (Pairable head, Pairable tail) {
 		this.head = head;
 		this.tail = tail;
 	}
 
-	public Expression car () { return head; }
+	public Pairable car () { return head; }
 
-	public Expression cdr () { return tail; }
+	public Pairable cdr () { return tail; }
 
 	public Boolean isSymbol () { return false; }
 	

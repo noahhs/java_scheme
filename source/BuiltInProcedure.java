@@ -4,13 +4,37 @@ public class BuiltInProcedure extends Procedure {
 
 	public static enum Type {PLUS, MINUS, TIMES, DIVIDEDBY, EQUALS, MODULO, EXPONENTIAL, LESSTHAN, DISPLAY, CAR, CDR, CONS};
 
+	public static EnvironmentFrame bindings () {
+		Map<String, Type> types = new HashMap<String, Type>();
+		map1.put("+"	, PLUS);
+		map1.put("-" 	, MINUS);
+		map1.put("*" 	, TIMES);
+		map1.put("/" 	, DIVIDEDBY);
+		map1.put("=" 	, EQUALS);
+		map1.put("modulo" , MODULO);
+		map1.put("^"	, EXPONENTIAL);
+		map1.put("<"      , LESSTHAN);
+		map1.put("display", DISPLAY);
+		map1.put("car"    , CAR);
+		map1.put("cdr"	, CDR);
+		map1.put("cons"   , CONS);
+		
+		EnvironmentFrame frame = new EnvironmentFrame();
+		for (String s : types.keySet()) {
+			frame.bind(new Symbol(s), new BoundExpression(new BuiltInProcedure(types.get(s))));
+		}
+		return frame;
+	}
+
 	private Type type;
 
 	public BuiltInProcedure (Type type) {
 		this.type = type;
 	}
 
-	public String toString () { return "#<procedure:" + this.string + ">"; }
+	public String toString () {
+		  return "#<procedure:" + this.string + ">";
+	}
 	
 	public Expression apply (List arguments, Runtime runtime) {
 		List args = arguments.evaluatedTerms(runtime);

@@ -1,6 +1,6 @@
 import java.io.OutputStream;
 
-public abstract class Expression {
+public abstract class Expression extends Pairable {
 
 	public Expression eval (Runtime runtime);
 
