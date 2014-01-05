@@ -1,6 +1,6 @@
 import java.io.OutputStream;
 
-public class Symbol extends Atom {
+public class Symbol extends Returnable implements Compiled {
 	
 	private static Map symbols = new HashMap<String, Symbol>();
 
@@ -27,24 +27,25 @@ public class Symbol extends Atom {
 
 	public Boolean isSymbol () { return true; }
 
-	public Expression compile (Runtime runtime) {
-		BoundExpression boundExpression = runtime.resolve(this);
-		if (boundExpression == null) {
-		} else {
-			return new Variable(this, boundExpression);
-		}
-			boundExpression = BuiltInProcedure.resolve(this);
-			if (boundExpression == null) {
-				if (isKeyword()) {
-					throwEval("Attempt to compile a keyword");
-				} else {
-					throwEval("Unbound identifier");
-				}
-				return null;
+	public Compiled compile (Runtime runtime) {
+		Variable variable = runtime.resolve(this);
+		if (variable == null) {
+			if (isKeyword()) {
+				return throwCompile("Bad syntax for keyword");
+			} else {
+				return this;
 			}
+		} else {
+			return variable;
 		}
-		return boundExpression;
 	}
-	
-	public Boolean equals (Identifier other) { string.equals(other.toString()); } // for Map key
+
+	public Returnable eval (Runtime runtime) {
+		Variable variable = runtime.resolve(this);
+		if (variable == null) {
+			return throwEval("Unbound identifier");
+		} else {
+			return variable.eval();
+		}
+	}
 }

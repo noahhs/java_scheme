@@ -4,7 +4,7 @@ import java.util;
 //import java.io.OutputStream;
 //import java.io.IOException;
 //import java.util.ArrayList;
-//import java.util.Deque;
+import java.util.Deque;
 //import java.util.HashTable;
 //import java.util.Map;
 
@@ -12,9 +12,9 @@ public class Runtime {
 
 	private InputStream istream;
 	private OutputStream ostream;
-	private List environment;
+	private Deque environment;
 	
-	public Runtime (InputStream inp, OutputStream out, EnvironmentFrame initialBindings) {
+	public Runtime (InputStream inp, OutputStream out, EnvironmentFrame initialBindings) {// might we ever need multiple initial frames?
 		istream = inp;
 		ostream = out;
 		environment = new List(initialBindings, null);
@@ -22,6 +22,20 @@ public class Runtime {
 
 	public void addBinding (Symbol symbol, BoundExpression bound) {
 		((EnvironmentFrame)environment.car()).bind(symbol, bound);
+	}
+
+	public void push (EnvironmentFrame frame) {
+		environment = new List(frame, environment);
+	}
+
+	public EnvironmentFrame pop () {
+		if (environment == null) {
+			return null;
+		} else {
+			EnvironmentFrame frame = environment.car();
+			environment = environment.cdr();
+			return frame;
+		}
 	}
 
 	public BoundExpression resolve (Symbol symbol) {
@@ -39,9 +53,13 @@ public class Runtime {
 		}
 	}
 	
-	public void evalNull() { throwEval("Attempt to eval null"); }
+	public void evalNull() {
+		throwEval("Attempt to eval null");
+	}
 
-	public OutputStream ostream () { return ostream; }
+	public OutputStream ostream () {
+		return ostream;
+	}
 
 	public ArrayList<Expression> read () {
 		Deque<Expression> stack = stackUpTerms("\n");

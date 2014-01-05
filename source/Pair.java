@@ -1,39 +1,26 @@
 import java.io.OutputStream;
 
-public class Pair extends Returnable {
+public class Pair<E extends Pairable, F extends Pairable> extends Returnable {
 	
-	private Pairable head;
-	private Pairable tail;
+	protected E head;
+	protected F tail;
 	
-	public Pair (Pairable head, Pairable tail) {
+	public Pair (E head, F tail) {
 		this.head = head;
 		this.tail = tail;
 	}
 
-	public Pairable car () { return head; }
+	public E car () { return head; }
 
-	public Pairable cdr () { return tail; }
+	public F cdr () { return tail; }
 
 	public Boolean isSymbol () { return false; }
 	
-	public Expression eval (Runtime runtime) {
+	public Returnable eval (Runtime runtime) {
 		return compile(runtime).eval(runtime);
 	}
 
-	public Boolean isCompound () { return true; }
-
-	public Boolean isList () {
-		if (tail == null) {
-			return true;
-		} else if (tail.isCompound()) {
-			return ((Pair)tail).isList();
-		} else {
-			return false;
-		}
-	}
-
 	public Compiled compile (Runtime runtime) {
-		if (!isList()) { throwCompile("Cannot compile non-list pair"); }
-		return ((List)this).compile(runtime);
+		return throwCompile("Cannot compile non-list pair");
 	}
 }

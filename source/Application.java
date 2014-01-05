@@ -1,14 +1,21 @@
 public class Application extends Expression implements Compiled {
 	
-	private Compiled applicative;
+	private Expression applicative;
 	private List arguments;//should really have a parametric List<Compiled> type
 
 	public Application (List head, List tail, Runtime runtime) {
-		applicative = head.compile(runtime);
-		arguments = compiledTerms(tail, runtime);
+		setTerms(head.compilie(runtime), tail, runtime);
 	}
 	
-	public Application (Variable head, List tail, Runtime runtime) {//we've already determined it's not a keyword
+	public Application (Variable head, List tail, Runtime runtime) {
+		setTerms(head, tail, runtime);
+	}
+
+	public Application (Symbol head, List tail, Runtime runtime) {
+		setTerms(head, tail, runtime);
+	}
+
+	private void setMembers(Expression head, List tail, Runtime runtime) {
 		applicative = head;
 		arguments = compiledTerms(tail, runtime);
 	}
@@ -21,11 +28,12 @@ public class Application extends Expression implements Compiled {
 		}
 	}
 
-	public Expression eval (Runtime runtime) {
-		Expression result = applicative.eval(runtime);
+	public Returnable eval (Runtime runtime) {
+		Returnable result = applicative.eval(runtime);
 		if (Procedure.isAssignableFrom(result.class) {// if this doesn't work, we could use Class.forName("Procedure")
 		//if (!result.isCompound() && ((Atom)result).isSelfEvaluating() && ((SelfEvaluating)result).isProcedure()) {
-			return ((Procedure)result).apply(arguments, runtime);
+			return ((Procedure)result).apply(arguments.evaluatedTerms(runtime), runtime);
+			// technically this may not be the way DrRacket does it. (Edit: Oh, but it is! :D )
 		} else {
 			throwEval("Applicative is not a procedure");
 			return null;

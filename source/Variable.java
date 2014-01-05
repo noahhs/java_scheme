@@ -1,17 +1,28 @@
 public class Variable extends Expression implements Compiled {
-	private BoundExpression lexicalBound = null;
-	private Symbol symbol;
+	
+	private Returnable result;
+	private Boolean initialized = false;
 
-	public Variable (Symbol symbol, BoundExpression bound) {
-		this.symbol = symbol;
-		this.lexicalBound = bound;
+	public Variable (Returnable result) {
+		this.set(result);
 	}
 
-	public Expression eval (Runtime runtime) {
-		if (lexicalBound != null) {
-			return lexicalBound.result();
+	public Variable () {}
+
+	public void set (Returnable value) {
+		result = value;
+		initialized = true;
+	}
+
+	public Returnable eval (Runtime runtime) {
+		return this.eval();
+	}
+
+	public Returnable eval () {
+		if (!initialized) {
+			return throwEval("That's odd--variable not initialized!");
 		} else {
-			return runtime.resolve(symbol).result();
+			return result;
 		}
 	}
 }

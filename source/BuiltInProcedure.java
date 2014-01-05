@@ -21,7 +21,7 @@ public class BuiltInProcedure extends Procedure {
 		
 		EnvironmentFrame frame = new EnvironmentFrame();
 		for (String s : types.keySet()) {
-			frame.bind(new Symbol(s), new BoundExpression(new BuiltInProcedure(types.get(s))));
+			frame.bind(new Symbol(s), new Variable(new BuiltInProcedure(types.get(s))));// gorgeous
 		}
 		return frame;
 	}
@@ -36,10 +36,9 @@ public class BuiltInProcedure extends Procedure {
 		  return "#<procedure:" + this.string + ">";
 	}
 	
-	public Expression apply (List arguments, Runtime runtime) {
-		List args = arguments.evaluatedTerms(runtime);
+	public Returnable apply (List args, Runtime runtime) {// arguments are Returnable, because they have been evaluated
 		Expression a1 = args.car();
-		List a2 = args.cdr().car();
+		Expression a2 = args.cdr().car();
 		switch (type) {
 			case PLUS:		return sum(args, runtime);
 			case MINUS:		return subtract(args, runtime);
@@ -56,110 +55,131 @@ public class BuiltInProcedure extends Procedure {
 			default:		return null;
 	}
 	
-	private static void arity (int arity, int value) {
-		arityRange (arity, value, value);
+	private void contract (List args, Class dass) {
+		for (Expression e : args) {
+			if (!e.satisfies(dass)) {
+				throwEval("Contract violation");
+			}
+		}
+	}
+	
+	private void arity (List args, int arity) {
+		arityRange(args, arity, arity);
 	}
 
-	private static void arityRange (int arity, int min, int max) {
-		arityMin(arity, min);
-		arityMax(arity, max);
+	private void arityRange (List args, int min, int max) {
+		arityMin(args, min);
+		arityMax(args, max);
 	}
 
-	private static void arityMin (int arity, int min) {
-		if (arity < min) { throw InvalidEvalException("Arity mismatch"); }
+	private void arityMin (List args, int min) {
+		if (args.size() < min) {
+			throwEval("Arity mismatch");
+		}
 	}
 
-	private void arityMax (int arity, int max) {
-		if (arity > max) { throw InvalidEvalException("Arity mismatch"); }
+	private void arityMax (List args, int max) {
+		if (args.size() > max) {
+			throwEval("Arity mismatch");
+		}
 	}
 
-	private static Expression sum (List arguments) {
+	private NumericType sum (List arguments) {
+		contract(arguments, NumericType);
 		Number accum = 0; // should cast
-		for (Expression exp : arguments) {
-			accum += exp.value();
+		for (Pairable exp : arguments) {
+			accum += ((NumericType)exp).value();
 		}
 		return new NumericType(accum);
 	}
 
-	private static Expression subtract (ArrayList<Expression> arguments) {
-		arityMin(arguments.size(), 1);
+	private NumericType subtract (List arguments) {
+		contract(arguments, NumericType);
+		arityMin(arguments, 1);
 		Number accum;
 		if (arguments.size() > 1) {
-			accum = arguments.get(0).value();
-			arguments.remove(0);
+			accum = ((NumericType)arguments.car()).value();
+			arguments = arguments.cdr();
 		} else {
 			accum = 0;
 		}
-		for (Expression exp : arguments) {
-			accum -= exp.value();
+		for (Pairable exp : arguments) {
+			accum -= ((NumericType)exp).value();
 		}
 		return new NumericType(accum);
 	}
 
-	private static Expression multiply (ArrayList<Expression> arguments) {
+	private NumericType multiply (List arguments) {
+		contract(arguments, NumericType);
 		Number accum = 1; // should cast
-		for (Expression exp : arguments) {
-			accum *= exp.value();
+		for (Pairable exp : arguments) {
+			accum *= ((NumericType)exp).value();
 		}
 		return new NumericType(accum);
 	}
 
-	private static Expression divide (ArrayList<Expression> arguments) {
+	private NumericType divide (List arguments) {
+		contract(arguments, NumericType);
 		Number accum;
 		if (arguments.size() > 1) {
-			accum = arguments.get(0).value();
-			arguments.remove(0);
+			accum = ((NumericType)arguments).car().value();
+			arguments = arguments.cdr();
 		} else {
 			accum = 1;
 		}
-		for (Expression exp : arguments) {
-			accum /= exp.value();
+		for (Pairable exp : arguments) {
+			accum /= ((NumericType)exp).value();
 		}
 		return new NumericType(accum);
 	}
 
-	private static Expression equals (ArrayList<Expression> arguments) {
-		arityMin(arguments.size(), 2);
+	private BooleanType equals (List arguments) {
+		contract(arguments, NumericType);
+		arityMin(arguments, 2);
 		Boolean accum = true;
-		for (Expression exp : arguments) {
-			accum = accum && exp.toBoolean();
+		Number value = ((NumericType)arguments.car()).value();
+		for (Pairable exp : arguments) {
+			accum = accum && (((NumericType)exp).value() == value);
 		}
 		return new BooleanType(accum);
 	}
 
-	private static Expression modulo (ArrayList<Expression> arguments) {
-		arity(arguments.size(), 2);
-		return new NumericType(arguments.get(0).value() % arguments.get(1).value());
+	private NumericType modulo (List arguments) {
+		contract(arguments, NumericType);
+		arity(arguments, 2);
+		return new NumericType(((NumericType)arguments.car()).value() % ((NumericType)arguments.cdr().car()).value());
 	}
 
-	private static Expression exponential (ArrayList<Expression> arguments) {
-		arity(arguments.size(), 2);
+	private NumericType exponential (List arguments) {
+		contract(arguments, NumericType);
+		arity(arguments, 2);
 		return new NumericType(Math.pow(arguments.get(0).value(), arguments.get(1).value()));
 	}
 
-	private static Expression lessthan (ArrayList<Expression> arguments) {
-		arity(arguments.size(), 2);
+	private BooleanType lessthan (List arguments) {
+		contract(arguments, NumericType);
+		arity(arguments, 2);
 		return new BooleanType(arguments.get(0).value() < arguments.get(1).value());
 	}
 
-	private static Expression display (ArrayList<Expression> arguments, OutputStream ostream) {
-		arity(arguments.size(), 1);
+	private VoidType display (List arguments, OutputStream ostream) {
+		arity(arguments, 1);
 		ostream.println(arguments.get(0).toString());
 		return null;
 	}
 
-	private static Expression car (ArrayList<Expression> arguments) {
-		arity(arguments.size(), 1);
-		return arguments.get(0).car();
+	private Returnable car (List arguments) {
+		arity(arguments, 1);
+		return (Returnable)arguments.get(0).car();
 	}
 
-	private static Expression cdr (ArrayList<Expression> arguments) {
-		arity(arguments.size(), 1);
+	private Returnable cdr (List arguments) {
+		arity(arguments, 1);
 		return arguments.get(0).cdr();
 	}
 
-	private static Expression cons (ArrayList<Expression> arguments, OutputStream ostream) {
-		arity(arguments.size(), 2);
+	private Returnable cons (List arguments, OutputStream ostream) {
+		arity(arguments, 2);
 		return arguments.get(1).cons(arguments.get(0));
 	}
 }

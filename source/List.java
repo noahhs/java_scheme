@@ -1,6 +1,6 @@
-public class List extends Pair {
+public class List<E extends Pairable> extends Pair<Pariable, List<Pairable>> {
 
-	public List(Pairable head, List tail) {
+	public List(E head, List<E> tail) {
 		this.head = head;
 		this.tail = tail;
 	}
@@ -11,11 +11,22 @@ public class List extends Pair {
 	}
 	
 	@Override
-	public List cdr () { return (List)super.cdr(); }
+	public List<E> cdr () {
+		return (List<E>)super.cdr();
+	}
+	
 	@Override
-	public List cons (Pairable exp) { return (List)super.cons(exp); }
-	@Override
-	public Boolean isList () { return true; }
+	public List<E> cons (E exp) {
+		return (List<E>)super.cons(exp);
+	}
+
+	public int size () {
+		if (tail == null) {
+			return 1;
+		} else {
+			return 1 + tail.size();
+		}
+	}
 
 	private String argsToString (List arguments) {
 		if (arguments == null) {
@@ -25,21 +36,30 @@ public class List extends Pair {
 		}
 	}
 
-	private List compiledTerms (Runtime runtime) {
-		Expression compiledHead = this.car().compile(runtime);
-		if (this.cdr() == null) {
-			  return new List(compiledHead, null);
+	public List<Compiled> compiledTerms (Runtime runtime) {
+		if (head.satisfies(Returnable)) {
+			Compiled compiledHead = head.compile(runtime);
+			if (tail == null) {
+				return new List<Compiled>(compiledHead, null);
+			} else {
+				return tail.compiledTerms(runtime).cons(compiledHead);
+			}
 		} else {
-			return this.cdr().compiledTerms(runtime).cons(compiledHead);
+			return throwCompile("Not a compilable object");
 		}
 	}
 
-	public List evaluatedTerms (Runtime runtime) {
-		Expression evaluatedHead = this.car().eval(runtime);
-		if (this.cdr() == null) {
-			return List(evaluatedHead, null);
+	// this should be restricted to List<Expression>
+	public List<Returnable> evaluatedTerms (Runtime runtime) {
+		if (head.satisfies(Expression)) {
+			Returnable evaluatedHead = head.eval(runtime);
+			if (tail == null) {
+				return List<Returnable>(evaluatedHead, null);
+			} else {
+				return tail.evaluatedTerms(runtime).cons(evaluatedHead);
+			}
 		} else {
-			return this.cdr().evaluatedTerms(runtime).cons(evaluatedHead);
+			return throwCompile("Not a compilable object");
 		}
 	}
 
@@ -48,15 +68,18 @@ public class List extends Pair {
 			if (((Pair)head).isList()) {
 				return new Application((List)head, tail, runtime);
 			} else {
-				throwCompile("Application: head not a procedure");
-				return null;
+				return throwCompile("Application: head not a procedure");
 			}
 		} else if ((Atom)head.isSymbol()) {
-			BoundExpression bound = runtime.resolve((Symbol)head);
-			if (bound == null && (SpecialForm.Keyword keyword = SpecialForm.keyword((Symbol)head)) != null) {
-				return specialForm(keyword, runtime);
+			Variable bound = runtime.resolve((Symbol)head);
+			if (bound == null) {
+				if ((SpecialForm.Keyword keyword = SpecialForm.keyword((Symbol)head)) != null) {
+					return specialForm(keyword, runtime);
+				} else {
+					return new Application((Symbol)head, tail, runtime);
+				}
 			}
-			return new Application(new Variable((Symbol)head, bound), this, runtime);
+			return new Application(bound, tail, runtime);
 		} else {
 			// could there be a self-evaluating procedure in here? Think about later.
 			throwCompile("Application: head not a procedure");
@@ -66,34 +89,46 @@ public class List extends Pair {
 
 	private SpecialForm specialForm(SpecialForm.Keyword keyword, Runtime runtime) {
 		switch (keyword) {
-			case DEFINE:	Returnable arg1 = tail.arg(1, Symbol);
-						Returnable arg2 = tail.arg(2, Returnable);
-						if (arg1 != null && arg2 != null) {
-							return new DefineForm((Symbol)arg1, (Returnable)arg2, runtime);
+			case DEFINE:	if (tail.termExistsAndIs(1, Symbol, false) && tail.termExistsAndIs(2, Returnable, false)) {
+							return new DefineForm((Symbol)tail.term(1), (Returnable)tail.term(2), runtime);
 						} else {
-							throwCompile("Bad syntax in define form");// should we put this checking logic in the constructor?
+							throwCompile("Bad syntax in define form");
 							return null;
 						}
-			case LAMBDA:	if (tail != null & tail.cdr() != null && (Expression arg1 = tail.car()).isCompound()) {
-							  Expression arg2 = tail.cdr().car();
-
+			case LAMBDA:	if (tail.termExistsAndIs(1, List, true) && tail.termExistsAndIs(2, Returnable, false)) {
+							return new CompoundProcedure((List)tail.term(1), (Returnable)tail.term(2), runtime);
+						} else {
+							throwCompile("Bad syntax in lambda form");
+							return null;
+						}
+			case COND:		return null;//return new CondForm(list, runtime);
+			case QUOTE:		return null;//return new QuoteForm(list, runtime);
 			case LET:		return null;//return new LetForm(list, runtime);
 			case LET_SPLAT:	return null;//return new LetSplatForm(list, runtime);
-			case QUOTE:		return null;//return new QuoteForm(list, runtime);
 			case BEGIN:		return null;//return new BeginForm(list, runtime);
 			default:		return null;
 		}
 	}
 
-	private Returnable arg (int argNum, Class dass) {
-		if (argNum == 1) {
-			if (dass.isAssignableFrom(head.class) {
-				return head;
+	private Boolean termExistsAndIs (int num, Class dass, Boolean allowNull) {
+		if (num == 1) {
+			if (head == null) {
+				return allowNull;
 			} else {
-				return null;
+				return head.satisfies(dass);
 			}
+		} else if (tail == null) {
+			return false;
 		} else {
-			return tail.arg(argNum - 1, dass);
+			return tail.termExistsAndIs(num - 1, dass, allowNull);
+		}
+	}
+
+	private Returnable term (int num) {
+		if (num == 1) {
+			return head;
+		} else {
+			return tail.term(num - 1);
 		}
 	}
 }
